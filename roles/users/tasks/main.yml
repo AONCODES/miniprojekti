@@ -26,7 +26,15 @@
     name:
       - ufw
       - nginx
+      - fail2ban
     state: present
+
+- name: enable fail2ban
+  become: true
+  ansible.builtin.service:
+    name: fail2ban
+    enabled: true
+    state: started
 
 - name: allow port 22 for ssh
   become: true
@@ -62,3 +70,27 @@
     - user2
     - user3
     - user4
+
+
+- name: create nginx site config
+  become: true
+  ansible.builtin.copy:
+    src: roles/users/files/miniprojekti.conf
+    dest: /etc/nginx/sites-available/miniprojekti.conf
+  notify: restart nginx
+
+- name: copy website files
+  become: true
+  ansible.builtin.copy:
+    src: roles/users/files/
+    dest: /var/www/projektisivu/
+  notify: restart nginx
+     
+
+- name: enable site
+  become: true
+  file:
+    src: /etc/nginx/sites-available/miniprojekti.conf
+    dest: /etc/nginx/sites-enabled/miniprojekti.conf
+    state: link
+
