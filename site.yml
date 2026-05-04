@@ -1,1 +1,4 @@
-täydennetää myöhemmin
+- hosts: local
+  become: true
+  roles:
+    - users

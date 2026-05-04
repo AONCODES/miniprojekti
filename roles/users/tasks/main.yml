@@ -1,1 +1,9 @@
-täytetään myöhemmin
+- name: create user
+  user:
+    name: "{{ item }}"
+    state: present
+  loop: 
+    - user1
+    - user2
+    - user3
+    - user4
