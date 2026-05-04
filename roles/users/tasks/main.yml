@@ -30,6 +30,7 @@
   ansible.builtin.user:
     name: richard
     password: "{{'1234' | password_hash('sha512') }}"
+    update_password: on_create
     groups: sudo
     append: true
 
