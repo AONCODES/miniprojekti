@@ -108,5 +108,5 @@
       - wget
       - curl
       - tree
-  state: present
+    state: present
 
