@@ -5,6 +5,27 @@
     update_cache: yes
     cache_valid_time: 86400
 
+- name: install ufw & nginx
+  become: true 
+  ansible.builtin.apt:
+    name:
+      - ufw
+      - nginx
+      - fail2ban
+    state: present
+
+- name: allow port 22 for ssh
+  become: true
+  community.general.ufw:
+    rule: allow
+    port: '22'
+    proto: tcp
+
+- name: enable ufw
+  become: true
+  community.general.ufw:
+    state: enabled
+
 - name: create admin user, add to sudo
   become: true
   ansible.builtin.user:
@@ -19,15 +40,11 @@
     user: admin
     key: "{{ lookup('file', '~/.ssh/id_ed25519.pub') }}"
 
-
-- name: install ufw & nginx
-  become: true 
-  ansible.builtin.apt:
-    name:
-      - ufw
-      - nginx
-      - fail2ban
-    state: present
+- name: lock root
+  become: true
+  ansible.builtin.user:
+    name: root
+    password_lock: yes
 
 - name: enable fail2ban
   become: true
@@ -36,30 +53,12 @@
     enabled: true
     state: started
 
-- name: allow port 22 for ssh
-  become: true
-  community.general.ufw:
-    rule: allow
-    port: '22'
-    proto: tcp
-
 - name: allow port 80 for http
   become: true
   community.general.ufw:
     rule: allow
     port: '80'
     proto: tcp
-
-- name: enable ufw
-  become: true
-  community.general.ufw:
-    state: enabled
-
-- name: lock root
-  become: true
-  ansible.builtin.user:
-    name: root
-    password_lock: yes
 
 - name: create normal user #no sudo
   user:
@@ -71,12 +70,18 @@
     - user3
     - user4
 
-
 - name: create nginx site config
   become: true
   ansible.builtin.copy:
     src: roles/users/files/miniprojekti.conf
     dest: /etc/nginx/sites-available/miniprojekti.conf
+  notify: restart nginx
+
+- name: disable nginx default site
+  become: true
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
   notify: restart nginx
 
 - name: copy website files
@@ -86,11 +91,22 @@
     dest: /var/www/projektisivu/
   notify: restart nginx
      
-
 - name: enable site
   become: true
   file:
     src: /etc/nginx/sites-available/miniprojekti.conf
     dest: /etc/nginx/sites-enabled/miniprojekti.conf
     state: link
+
+- name: other usefull packages
+  become: true
+  ansible.builtin.apt:
+    name:
+      - micro
+      - bash-completion
+      - openssh-client
+      - wget
+      - curl
+      - tree
+  state: present
 
